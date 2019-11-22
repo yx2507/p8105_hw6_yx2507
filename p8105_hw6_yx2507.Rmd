@@ -7,6 +7,9 @@ output: github_document
 
 ```{r setup, message=FALSE}
 library(tidyverse)
+library(purrr)
+library(modelr)
+library(mgcv)
 knitr::opts_chunk$set(
 	echo = TRUE,
 	warning = FALSE,
@@ -47,9 +50,9 @@ missing
 after cleaning the data, we check the missing data and make sure that there is no missing data.
 
 # model fitting"
-I hypothesize that baby's birthweight is associated with mother's weight at delivery. The research hypothesis would be the larger for mother's weight at delivery, the larger the birthweight for the baby. I will fit a linear regression model for this.
+I hypothesize that baby's birthweight is associated with mother's characteristics like age and weight at delivery. The research hypothesis would be the larger for mother's weight at delivery, the larger the birthweight for the baby. I will fit a linear regression model for this.
 ```{r}
-fit = lm(bwt ~ delwt, data = bw_df)
+fit = lm(bwt ~ delwt+ momage, data = bw_df)
   
 ```
 
@@ -72,5 +75,55 @@ diagnosis_plot=diagnosis%>%
 
 diagnosis_plot
 
+```
+
+# compare with more model
+
+1.One using length at birth and gestational age as predictors (main effects only)
+```{r}
+fit_2=lm(bwt ~ blength + gaweeks, data = bw_df)
+
+fit_2%>%
+  broom::tidy() %>% 
+  as.tibble()
+  
+fit_3= lm(bwt ~ bhead + blength + babysex + bhead*blength+bhead*babysex+blength*babysex+ bhead*blength*babysex, data = bw_df)
+
+```
+ 
+# compare the models
+```{r}
+cv_df= crossv_mc (bw_df, 100)
+
+cv_df =
+  cv_df %>% 
+  mutate(
+    train = map(train, as_tibble),
+    test = map(test, as_tibble))
+
+
+cv=cv_df%>%
+  mutate(fit= map(train,~fit),
+         fit_2= map(train,~fit_2),
+         fit_3= map(train,~fit_3)
+         )%>%
+  mutate(rmse_1 = map2_dbl(fit, test, ~rmse(model = .x, data = .y)),
+         rmse_2 = map2_dbl(fit_2, test, ~rmse(model = .x, data = .y)),
+         rmse_3 = map2_dbl(fit_3, test, ~rmse(model = .x, data = .y)))
+
+```
+
+```{r}
+plot= cv%>% 
+  select(starts_with("rmse")) %>% 
+  pivot_longer(
+    everything(),
+    names_to = "model", 
+    values_to = "rmse",
+    names_prefix = "rmse_") %>% 
+  mutate(model = fct_inorder(model)) %>% 
+  ggplot(aes(x = model, y = rmse)) + geom_violin()
+
+plot
 ```
 
