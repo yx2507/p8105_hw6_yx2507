@@ -62,14 +62,15 @@ fit %>%
 
 # model diagnosis
 ```{r}
-modelr::add_residuals(bw_df, fit)%>%
-  ggplot(aes(x = delwt, y = bwt))+
-  geom_violin()+
-  ylim(0,6000)
+diagnosis= bw_df%>%
+     modelr::add_residuals(fit)%>%
+      modelr::add_predictions(fit)
 
-modelr::add_predictions(bw_df, fit)%>%
-  ggplot(aes(x= delwt, y = bwt))+
+diagnosis_plot=diagnosis%>% 
+  ggplot(aes(x= pred, y= resid))+
   geom_point()
+
+diagnosis_plot
 
 ```
 
