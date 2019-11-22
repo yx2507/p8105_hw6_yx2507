@@ -45,3 +45,31 @@ missing
 ```
 
 after cleaning the data, we check the missing data and make sure that there is no missing data.
+
+# model fitting"
+I hypothesize that baby's birthweight is associated with mother's weight at delivery. The research hypothesis would be the larger for mother's weight at delivery, the larger the birthweight for the baby. I will fit a linear regression model for this.
+```{r}
+fit = lm(bwt ~ delwt, data = bw_df)
+  
+```
+
+tidy the result 
+```{r}
+fit %>% 
+  broom::tidy() %>% 
+  as.tibble()
+```
+
+# model diagnosis
+```{r}
+modelr::add_residuals(bw_df, fit)%>%
+  ggplot(aes(x = delwt, y = bwt))+
+  geom_violin()+
+  ylim(0,6000)
+
+modelr::add_predictions(bw_df, fit)%>%
+  ggplot(aes(x= delwt, y = bwt))+
+  geom_point()
+
+```
+
