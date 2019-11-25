@@ -28,9 +28,9 @@ set.seed(1)
 ```
 
 
-# problem 1
+# Problem 1
 
-## load and clean the data
+## 1.1 Load and clean the data
 ```{r}
 bw_df=read_csv(file = "./data/birthweight.csv")%>%
   janitor::clean_names()%>%
@@ -47,23 +47,37 @@ missing= bw_df %>%
 missing
 ```
 
-after cleaning the data, we check the missing data and make sure that there is no missing data.
+After cleaning the data, we check the missing data and make sure that there is no missing data.
 
-# model fitting"
-I hypothesize that baby's birthweight is associated with mother's characteristics like age and weight at delivery. The research hypothesis would be the larger for mother's weight at delivery, the larger the birthweight for the baby. I will fit a linear regression model for this.
+## 1.2 Model fitting
+I hypothesize that baby's birthweight is associated with mother's characteristics weight at delivery due to the literature review. The research hypothesis would be the larger for mother's weight at delivery, the larger the birthweight for the baby. I will first check the scatterplot to see whether there is a linear trend and then fit a linear regression model for this.
+
+## 1.3 Check linearity
+
+```{r}
+bw_df%>%
+  ggplot(aes(x=delwt, y=bwt))+
+  geom_point()
+
+
+```
+As we can see from the scatterplot, there is a moderate postivie linear relationship between mother's weight at delivery and birthweight.
+
+## 1.4 Fit a simple linear regression model
+
 ```{r}
 fit = lm(bwt ~ delwt+ momage, data = bw_df)
   
 ```
 
-tidy the result 
+## 1.5 Tidy the result 
 ```{r}
 fit %>% 
   broom::tidy() %>% 
   as.tibble()
 ```
 
-# model diagnosis
+## 1.6 Model diagnosis
 ```{r}
 diagnosis= bw_df%>%
      modelr::add_residuals(fit)%>%
@@ -77,9 +91,9 @@ diagnosis_plot
 
 ```
 
-# compare with more model
+## 1.7 Fit more models for comparison
 
-1.One using length at birth and gestational age as predictors (main effects only)
+
 ```{r}
 fit_2=lm(bwt ~ blength + gaweeks, data = bw_df)
 
@@ -91,7 +105,7 @@ fit_3= lm(bwt ~ bhead + blength + babysex + bhead*blength+bhead*babysex+blength*
 
 ```
  
-# compare the models
+## 1.8 Compare the models
 ```{r}
 cv_df= crossv_mc (bw_df, 100)
 
@@ -127,12 +141,12 @@ plot= cv%>%
 plot
 ```
 
-from the figure, we can tell that model 1 has obviously larger rmse, which means it might not be an appropriate model. Model 1 might lose some important information.
+From the figure, we can tell that model 1 has obviously larger rmse, which means it might not be an appropriate model. Model 1 might lose some important information. Model 3 has smaller rmse than the other 2, it might be a better model.
 
 
 # Promble 2
 
-## read in the data
+## 2.1 Read in the data
 
 ```{r}
 weather_df = 
@@ -147,7 +161,7 @@ weather_df =
     tmax = tmax / 10) %>%
   select(name, id, everything())
 ```
-## Doing bootstraping 
+## 2.2 Doing bootstraping 
 
 ```{r}
 weather=weather_df%>%
@@ -165,7 +179,7 @@ weather=weather_df%>%
 ```
 
 
-## estimate1-- r^2
+## 2.3 Estimate1-- r^2
 ```{r}
 weather %>%
   ggplot(aes(x = r_squared)) +
@@ -177,7 +191,7 @@ quantile(pull(weather, r_squared),c(0.025,0.975))
 
 the figure above shows the distribution of r^2 in the bootstrap dataset tend to be a normal distribution, we can see the 95% confidence interval is (0.8936977, 0.9274955 )
 
-## estimate--`log(beta0*beta1)`
+## 2.4 Estimate--`log(beta0*beta1)`
 
 ```{r}
 
@@ -195,6 +209,10 @@ plot_beta=log_beta%>%
   ggplot(aes(x=log_beta))+geom_density()
 
 plot_beta
+
+quantile(pull(log_beta, log_beta),c(0.025,0.975))
 ```
 
 we can see from the plot above, we can tell that the distribution of the `log(beta0*beta1)` is approximately normal distribution. This indicates that bootstrap sampling method is similar to drawing sample from the population and fitting model with that samples. This will result in the parameter estimates from the regression model tend to follow normal distribution.
+
+The 95% confidence interval for the `log(beta0*beta1)` is (1.966942, 2.058555)
