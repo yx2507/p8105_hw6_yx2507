@@ -91,6 +91,8 @@ diagnosis_plot
 
 ```
 
+From this diagnosis plot, we can see the residuals are almost randomly distributed around 0. There is no extrem pattern observed. This supports the assumptions.
+
 ## 1.7 Fit more models for comparison
 
 
